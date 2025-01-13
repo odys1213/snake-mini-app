@@ -72,7 +72,12 @@ document.addEventListener('DOMContentLoaded', function () {
             clearInterval(gameInterval);
             alert(`Game over, score: ${score}`);
              Telegram.WebApp.sendData(`score=${score}`);
-            return;
+             //add "play again" button
+              const playAgainButton = document.createElement('button');
+            playAgainButton.textContent = 'Играть снова';
+            playAgainButton.onclick = startGame;
+            document.body.appendChild(playAgainButton);
+           return;
         }
         
          draw();
@@ -110,8 +115,61 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // touch controls
+    let touchStartX;
+    let touchStartY;
+    canvas.addEventListener('touchstart', function(event) {
+        touchStartX = event.touches[0].clientX;
+        touchStartY = event.touches[0].clientY;
+    });
+
+    canvas.addEventListener('touchend', function(event) {
+        if (!touchStartX || !touchStartY) {
+            return;
+        }
+    
+        const touchEndX = event.changedTouches[0].clientX;
+        const touchEndY = event.changedTouches[0].clientY;
+    
+        const dx = touchEndX - touchStartX;
+        const dy = touchEndY - touchStartY;
+    
+        if (Math.abs(dx) > Math.abs(dy)) {
+            if (dx > 0 && direction !== 'left') {
+                direction = 'right';
+            } else if(dx < 0 && direction !== 'right'){
+                direction = 'left';
+            }
+        } else {
+           if(dy > 0 && direction !== 'up'){
+               direction = 'down'
+           }
+             else if(dy < 0 && direction !== 'down'){
+               direction = 'up';
+           }
+        }
+    
+        touchStartX = null;
+        touchStartY = null;
+    });
 
     document.addEventListener('keydown', handleKeyDown);
-    gameInterval = setInterval(update, gameSpeed);
+    startGame();
+    
+    function startGame(){
+        snake = [{ x: 10, y: 10 }];
+        food = { x: 5, y: 5 };
+        direction = 'right';
+        score = 0;
+        scoreDisplay.textContent = `Score: ${score}`;
+        gameSpeed = 150;
+        clearInterval(gameInterval);
 
-});
+        const playAgainButton = document.querySelector('button');
+        if(playAgainButton){
+             playAgainButton.remove();
+        }
+       
+        gameInterval = setInterval(update, gameSpeed);
+    }
+ });
