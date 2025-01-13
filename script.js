@@ -2,14 +2,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const scoreDisplay = document.getElementById('score');
+    const playAgainButton = document.getElementById('playAgainButton');
 
     const gridSize = 15;
     const gridCount = canvas.width / gridSize;
     let snake = [{ x: 10, y: 10 }];
-    let food = { x: 5, y: 5 };
+    let food = getRandomPosition();
     let direction = 'right';
     let score = 0;
-    let gameSpeed = 150; // in milliseconds
+    let gameSpeed = 1; // in milliseconds
     let gameInterval;
 
     function getRandomPosition() {
@@ -18,71 +19,69 @@ document.addEventListener('DOMContentLoaded', function () {
             y: Math.floor(Math.random() * gridCount)
         };
     }
-     
+
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        //draw snake
+        // Рисуем змейку
         ctx.fillStyle = 'green';
-         snake.forEach(segment => {
+        snake.forEach(segment => {
             ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
         });
 
-         //draw food
+        // Рисуем еду
         ctx.fillStyle = 'red';
         ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
-
     }
 
-    function update() {
-        const head = { ...snake[0] };
+    let lastUpdateTime = 0;
 
-        switch (direction) {
-            case 'up':
-                head.y -= 1;
-                break;
-            case 'down':
-                head.y += 1;
-                break;
-            case 'left':
-                head.x -= 1;
-                break;
-            case 'right':
-                head.x += 1;
-                break;
-        }
-
-        snake.unshift(head);
-
-       
-       //check if snake eat food
-        if (head.x === food.x && head.y === food.y) {
-             score++;
-             scoreDisplay.textContent = `Score: ${score}`;
-            food = getRandomPosition();
-            gameSpeed = Math.max(gameSpeed - 5, 20);
-            clearInterval(gameInterval);
-             gameInterval = setInterval(update, gameSpeed);
-
-         } else {
-            snake.pop(); //remove the last section of the snake
-        }
-
-        //check if game is over
-        if(head.x < 0 || head.x >= gridCount || head.y < 0 || head.y >= gridCount || checkSelfCollision()) {
-            clearInterval(gameInterval);
-            alert(`Game over, score: ${score}`);
-             Telegram.WebApp.sendData(`score=${score}`);
-             //add "play again" button
-              const playAgainButton = document.createElement('button');
-            playAgainButton.textContent = 'Играть снова';
-            playAgainButton.onclick = startGame;
-            document.body.appendChild(playAgainButton);
-           return;
-        }
-        
-         draw();
+function update(timestamp) {
+    if (timestamp - lastUpdateTime < gameSpeed) {
+        requestAnimationFrame(update);
+        return;
     }
-   
+    lastUpdateTime = timestamp;
+
+    const head = { ...snake[0] };
+
+    switch (direction) {
+        case 'up':
+            head.y -= 1;
+            break;
+        case 'down':
+            head.y += 1;
+            break;
+        case 'left':
+            head.x -= 1;
+            break;
+        case 'right':
+            head.x += 1;
+            break;
+    }
+
+    snake.unshift(head);
+
+    // Проверка, если змейка съела еду
+    if (head.x === food.x && head.y === food.y) {
+        score++;
+        scoreDisplay.textContent = `Score: ${score}`;
+        food = getRandomPosition();
+        gameSpeed = Math.max(gameSpeed - 5, 50); // Уменьшаем скорость, но не ниже 50
+    } else {
+        snake.pop(); // Удаляем последний сегмент змейки
+    }
+
+    // Проверка, если игра окончена
+    if (head.x < 0 || head.x >= gridCount || head.y < 0 || head.y >= gridCount || checkSelfCollision()) {
+        alert(`Game over, score: ${score}`);
+        playAgainButton.style.display = 'inline-block'; // Показываем кнопку "Играть снова"
+        return;
+    }
+
+    draw();
+    requestAnimationFrame(update); // Используем requestAnimationFrame для плавной анимации
+}
+
     function checkSelfCollision() {
         const head = snake[0];
         for (let i = 1; i < snake.length; i++) {
@@ -92,84 +91,81 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return false;
     }
-    
 
     function handleKeyDown(event) {
         switch (event.key) {
             case 'ArrowUp':
-                if(direction !== 'down')
-                    direction = 'up';
+                if (direction !== 'down') direction = 'up';
                 break;
             case 'ArrowDown':
-               if(direction !== 'up')
-                  direction = 'down';
+                if (direction !== 'up') direction = 'down';
                 break;
             case 'ArrowLeft':
-               if(direction !== 'right')
-                 direction = 'left';
+                if (direction !== 'right') direction = 'left';
                 break;
             case 'ArrowRight':
-                if(direction !== 'left')
-                    direction = 'right';
+                if (direction !== 'left') direction = 'right';
                 break;
         }
     }
 
-    // touch controls
+    // Управление касанием
     let touchStartX;
     let touchStartY;
+
     canvas.addEventListener('touchstart', function(event) {
         touchStartX = event.touches[0].clientX;
         touchStartY = event.touches[0].clientY;
+    });
+
+    canvas.addEventListener('touchmove', function(event) {
+        event.preventDefault(); // Предотвращаем прокрутку страницы
     });
 
     canvas.addEventListener('touchend', function(event) {
         if (!touchStartX || !touchStartY) {
             return;
         }
-    
+
         const touchEndX = event.changedTouches[0].clientX;
         const touchEndY = event.changedTouches[0].clientY;
-    
+
         const dx = touchEndX - touchStartX;
         const dy = touchEndY - touchStartY;
-    
+
         if (Math.abs(dx) > Math.abs(dy)) {
             if (dx > 0 && direction !== 'left') {
                 direction = 'right';
-            } else if(dx < 0 && direction !== 'right'){
+            } else if (dx < 0 && direction !== 'right') {
                 direction = 'left';
             }
         } else {
-           if(dy > 0 && direction !== 'up'){
-               direction = 'down'
-           }
-             else if(dy < 0 && direction !== 'down'){
-               direction = 'up';
-           }
+            if (dy > 0 && direction !== 'up') {
+                direction = 'down';
+            } else if (dy < 0 && direction !== 'down') {
+                direction = 'up';
+            }
         }
-    
+
         touchStartX = null;
         touchStartY = null;
     });
 
     document.addEventListener('keydown', handleKeyDown);
-    startGame();
     
-    function startGame(){
+    function startGame() {
         snake = [{ x: 10, y: 10 }];
-        food = { x: 5, y: 5 };
+        food = getRandomPosition();
         direction = 'right';
         score = 0;
         scoreDisplay.textContent = `Score: ${score}`;
-        gameSpeed = 150;
-        clearInterval(gameInterval);
+        gameSpeed = 120;
 
-        const playAgainButton = document.querySelector('button');
-        if(playAgainButton){
-             playAgainButton.remove();
-        }
-       
-        gameInterval = setInterval(update, gameSpeed);
+        playAgainButton.style.display = 'none'; // Скрываем кнопку "Играть снова"
+
+        requestAnimationFrame(update); // Начинаем игру с плавной анимацией
     }
- });
+
+    playAgainButton.onclick = startGame; // Назначаем обработчик клика для кнопки "Играть снова"
+    startGame(); // Запускаем игру при загрузке
+});
