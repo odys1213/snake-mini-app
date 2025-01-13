@@ -5,13 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Змейка</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #380a0a;
+            flex-direction: column;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #gameCanvas {
+            border: 1px solid #000;
+            margin: 10px 0;
+            background-color: #e0e0e0;
+        }
+
+        #score {
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
+
+        .play-again-button {
+            background-color: #4CAF50; /* Зеленый */
+            border: none; /* Убираем рамку */
+            color: white; /* Белый текст */
+            padding: 15px 32px; /* Отступы */
+            text-align: center; /* Выравнивание текста */
+            text-decoration: none; /* Убираем подчеркивание */
+            display: inline-block; /* Позволяет задавать размеры */
+            font-size: 16px; /* Размер шрифта */
+            margin: 4px 2px; /* Отступы */
+            cursor: pointer; /* Указатель мыши */
+            border-radius: 8px; /* Закругленные углы */
+            transition: background-color 0.3s, transform 0.2s; /* Плавные переходы */
+            display: none; /* Скрываем кнопку по умолчанию */
+        }
+
+        .play-again-button:hover {
+            background-color: #45a049; /* Темнее при наведении */
+            transform: scale(1.05); /* Увеличение при наведении */
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Змейка</h1>
         <canvas id="gameCanvas" width="300" height="300"></canvas>
         <div id="score">Score: 0</div>
+        <button class="play-again-button" id="playAgainButton">Играть снова</button>
     </div>
     <script src="script.js"></script>
 </body>
