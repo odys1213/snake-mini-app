@@ -5,8 +5,8 @@ tg.ready();
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const cellSize = 20;
-const initialSpeed = 150; // Начальная скорость
-const speedIncrement = 5; // Увеличение скорости
+const initialSpeed = 150;
+const speedIncrement = 5; 
 const minSpeed = 50;
 let snake = [{x: 10, y: 10}];
 let direction = 'right';
