@@ -20,18 +20,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 90%; /* Используем проценты для ширины */
+            width: 90%;
             max-width: 800px;
             background-color: #fff;
-            padding: 5%; /* Используем проценты для отступов */
+            padding: 5%;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            flex-direction: column; /* Изменяем направление на колонку для вертикального разрешения */
         }
 
         #gameCanvas {
             border: 1px solid #000;
             background-color: #e0e0e0;
-            width: 50%; /* Используем проценты для ширины */
+            width: 100%; /* Используем 100% ширины контейнера */
             height: auto; /* Автоматическая высота для адаптивности */
         }
 
@@ -41,48 +42,70 @@
         }
 
         .play-again-button {
-            background-color: #4CAF50; /* Зеленый */
-            border: none; /* Убираем рамку */
-            color: white; /* Белый текст */
-            padding: 3% 5%; /* Используем проценты для отступов */
-            text-align: center; /* Выравнивание текста */
-            text-decoration: none; /* Убираем подчеркивание */
-            display: inline-block; /* Позволяет задавать размеры */
-            font-size: 16px; /* Размер шрифта */
-            margin: 2% 0; /* Отступы */
-            cursor: pointer; /* Указатель мыши */
-            border-radius: 8px; /* Закругленные углы */
-            transition: background-color 0.3s, transform 0.2s; /* Плавные переходы */
-            display: none; /* Скрываем кнопку по умолчанию */
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 3% 5%;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 2% 0;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.2s;
+            display: none;
         }
 
         .play-again-button:hover {
-            background-color: #45a049; /* Темнее при наведении */
-            transform: scale(1.05); /* Увеличение при наведении */
+            background-color: #45a049;
+            transform: scale(1.05);
         }
 
         .controls {
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* По умолчанию вертикально */
             align-items: center;
-            margin-left: 5%; /* Используем проценты для отступов */
+            margin-left: 5%;
         }
 
         button {
             margin: 2%;
-            padding: 3%; /* Используем проценты для отступов */
+            padding: 3%;
             font-size: 20px;
             cursor: pointer;
-            border: 1px solid #ccc; /* Рамка кнопок */
-            border-radius: 5px; /* Закругленные углы */
-            background-color: #f0f0f0; /* Цвет фона кнопок */
-            transition: background-color 0.3s; /* Плавный переход цвета */
-            width: 60px; /* Фиксированная ширина для кнопок */
-            height: 60px; /* Фиксированная высота для кнопок */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            transition: background-color 0.3s;
+            width: 60px;
+            height: 60px;
         }
 
         button:hover {
-            background-color: #ddd; /* Цвет фона при наведении */
+            background-color: #ddd;
+        }
+
+        /* Медиа-запрос для горизонтальной ориентации */
+        @media (orientation: landscape) {
+            .container {
+                flex-direction: row; /* Изменяем направление на строку для горизонтального разрешения */
+            }
+
+            .controls {
+                flex-direction: column; /* Кнопки будут располагаться вертикально */
+                margin-left: 0; /* Убираем отступ слева */
+            }
+        }
+
+        /* Медиа-запрос для вертикальной ориентации */
+        @media (orientation: portrait) {
+            .controls {
+                position: absolute; /* Абсолютное позиционирование для удобного размещения кнопок */
+                bottom: 10%; /* Расположение снизу */
+                left: 50%; /* Центрируем по горизонтали */
+                transform: translateX(-50%); /* Центрируем кнопки */
+            }
         }
     </style>
 </head>
