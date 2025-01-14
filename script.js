@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let food = getRandomPosition();
     let direction = 'right';
     let score = 0;
-    let gameSpeed = 1; // in milliseconds
+    let gameSpeed = 120; // Установим начальную скорость
     let gameInterval;
 
     function getRandomPosition() {
@@ -22,65 +22,61 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Рисуем змейку
         ctx.fillStyle = 'green';
         snake.forEach(segment => {
             ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
         });
 
-        // Рисуем еду
         ctx.fillStyle = 'red';
         ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
     }
 
     let lastUpdateTime = 0;
 
-function update(timestamp) {
-    if (timestamp - lastUpdateTime < gameSpeed) {
+    function update(timestamp) {
+        if (timestamp - lastUpdateTime < gameSpeed) {
+            requestAnimationFrame(update);
+            return;
+        }
+        lastUpdateTime = timestamp;
+
+        const head = { ...snake[0] };
+
+        switch (direction) {
+            case 'up':
+                head.y -= 1;
+                break;
+            case 'down':
+                head.y += 1;
+                break;
+            case 'left':
+                head.x -= 1;
+                break;
+            case 'right':
+                head.x += 1;
+                break;
+        }
+
+        snake.unshift(head);
+
+        if (head.x === food.x && head.y === food.y) {
+            score++;
+            scoreDisplay.textContent = `Score: ${score}`;
+            food = getRandomPosition();
+            gameSpeed = Math.max(gameSpeed - 5, 50);
+        } else {
+            snake.pop();
+        }
+
+        if (head.x < 0 || head.x >= gridCount || head.y < 0 || head.y >= gridCount || checkSelfCollision()) {
+            alert(`Game over, score: ${score}`);
+            playAgainButton.style.display = 'inline-block';
+            return;
+        }
+
+        draw();
         requestAnimationFrame(update);
-        return;
     }
-    lastUpdateTime = timestamp;
-
-    const head = { ...snake[0] };
-
-    switch (direction) {
-        case 'up':
-            head.y -= 1;
-            break;
-        case 'down':
-            head.y += 1;
-            break;
-        case 'left':
-            head.x -= 1;
-            break;
-        case 'right':
-            head.x += 1;
-            break;
-    }
-
-    snake.unshift(head);
-
-    // Проверка, если змейка съела еду
-    if (head.x === food.x && head.y === food.y) {
-        score++;
-        scoreDisplay.textContent = `Score: ${score}`;
-        food = getRandomPosition();
-        gameSpeed = Math.max(gameSpeed - 5, 50); // Уменьшаем скорость, но не ниже 50
-    } else {
-        snake.pop(); // Удаляем последний сегмент змейки
-    }
-
-    // Проверка, если игра окончена
-    if (head.x < 0 || head.x >= gridCount || head.y < 0 || head.y >= gridCount || checkSelfCollision()) {
-        alert(`Game over, score: ${score}`);
-        playAgainButton.style.display = 'inline-block'; // Показываем кнопку "Играть снова"
-        return;
-    }
-
-    draw();
-    requestAnimationFrame(update); // Используем requestAnimationFrame для плавной анимации
-}
 
     function checkSelfCollision() {
         const head = snake[0];
@@ -109,50 +105,23 @@ function update(timestamp) {
         }
     }
 
-    // Управление касанием
-    let touchStartX;
-    let touchStartY;
-
-    canvas.addEventListener('touchstart', function(event) {
-        touchStartX = event.touches[0].clientX;
-        touchStartY = event.touches[0].clientY;
+    // Обработчики событий для кнопок управления
+    document.getElementById('upButton').addEventListener('click', () => {
+        if (direction !== 'down') direction = 'up';
     });
 
-    canvas.addEventListener('touchmove', function(event) {
-        event.preventDefault(); // Предотвращаем прокрутку страницы
+    document.getElementById('downButton').addEventListener('click', () => {
+        if (direction !== 'up') direction = 'down';
     });
 
-    canvas.addEventListener('touchend', function(event) {
-        if (!touchStartX || !touchStartY) {
-            return;
-        }
-
-        const touchEndX = event.changedTouches[0].clientX;
-        const touchEndY = event.changedTouches[0].clientY;
-
-        const dx = touchEndX - touchStartX;
-        const dy = touchEndY - touchStartY;
-
-        if (Math.abs(dx) > Math.abs(dy)) {
-            if (dx > 0 && direction !== 'left') {
-                direction = 'right';
-            } else if (dx < 0 && direction !== 'right') {
-                direction = 'left';
-            }
-        } else {
-            if (dy > 0 && direction !== 'up') {
-                direction = 'down';
-            } else if (dy < 0 && direction !== 'down') {
-                direction = 'up';
-            }
-        }
-
-        touchStartX = null;
-        touchStartY = null;
+    document.getElementById('leftButton').addEventListener('click', () => {
+        if (direction !== 'right') direction = 'left';
     });
 
-    document.addEventListener('keydown', handleKeyDown);
-    
+    document.getElementById('rightButton').addEventListener('click', () => {
+        if (direction !== 'left') direction = 'right';
+    });
+
     function startGame() {
         snake = [{ x: 10, y: 10 }];
         food = getRandomPosition();
@@ -161,11 +130,12 @@ function update(timestamp) {
         scoreDisplay.textContent = `Score: ${score}`;
         gameSpeed = 120;
 
-        playAgainButton.style.display = 'none'; // Скрываем кнопку "Играть снова"
+        playAgainButton.style.display = 'none';
 
-        requestAnimationFrame(update); // Начинаем игру с плавной анимацией
+        requestAnimationFrame(update);
     }
 
-    playAgainButton.onclick = startGame; // Назначаем обработчик клика для кнопки "Играть снова"
-    startGame(); // Запускаем игру при загрузке
+    playAgainButton.onclick = startGame;
+    document.addEventListener('keydown', handleKeyDown);
+    startGame();
 });
