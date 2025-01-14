@@ -19,6 +19,8 @@ const foodSprite = new Image();
 let useSensor = false;
 let lastDirectionChange = 0;
 let controlType = 'button';
+let motionSensor; // Объявите motionSensor здесь, чтобы он был доступен в области видимости модуля
+
 snakeHeadSprite.src = 'dragon.png';
 foodSprite.src = 'apple.png'
 
@@ -193,44 +195,46 @@ window.closeSettings = function() {
 window.setControlType=function(controlElement) {
   controlType = controlElement.value;
         if (controlType === 'sensor') {
-            uim.disableButtons()
+             uim.disableButtons();
             setupMotionSensor();
-             useSensor = true;
+            useSensor = true;
         }else{
-           if (motionSensor) motionSensor.stop();
+           if (motionSensor) {
+                motionSensor.stop();
+                motionSensor = null; // Clear the motionSensor variable
+            }
             uim.enableButtons()
              useSensor = false;
         }
        saveSettings()
 };
 
-let motionSensor;
 function setupMotionSensor() {
     try {
          motionSensor = new DeviceOrientationSensor({ frequency: 20 });
         motionSensor.addEventListener('reading', () => {
-               const  threshold=0.2;
-           const alpha = motionSensor.alpha;
+            const threshold=0.2;
+            const alpha = motionSensor.alpha;
             const beta = motionSensor.beta;
-               const gamma = motionSensor.gamma;
-             if (alpha == null || beta == null || gamma == null){
-                  return
-             }
-                const timeNow = Date.now();
+            const gamma = motionSensor.gamma;
+            if (alpha == null || beta == null || gamma == null){
+                return
+            }
+            const timeNow = Date.now();
                 if (timeNow - lastDirectionChange < 500) return
-    let newDirection = direction;
-     if (Math.abs(beta) > threshold &&  Math.abs(gamma)< threshold )
-    {
-       newDirection= beta > 0 ? "down" : "up";
-           }
-        if ( Math.abs(gamma) > threshold && Math.abs(beta) < threshold)
-        {
-               newDirection = gamma >0 ? "right":"left";
-             }
-  if(newDirection!==direction){
-         window.changeDirection(newDirection);
-         lastDirectionChange = Date.now();
-           }
+                let newDirection = direction;
+           if (Math.abs(beta) > threshold &&  Math.abs(gamma)< threshold )
+            {
+              newDirection= beta > 0 ? "down" : "up";
+            }
+             if ( Math.abs(gamma) > threshold && Math.abs(beta) < threshold)
+            {
+                newDirection = gamma >0 ? "right":"left";
+            }
+            if(newDirection!==direction){
+                window.changeDirection(newDirection);
+                lastDirectionChange = Date.now();
+            }
         });
         motionSensor.start();
     } catch (error) {
