@@ -20,10 +20,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
+            width: 90%; /* Используем проценты для ширины */
             max-width: 800px;
             background-color: #fff;
-            padding: 20px;
+            padding: 5%; /* Используем проценты для отступов */
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
@@ -31,6 +31,8 @@
         #gameCanvas {
             border: 1px solid #000;
             background-color: #e0e0e0;
+            width: 50%; /* Используем проценты для ширины */
+            height: auto; /* Автоматическая высота для адаптивности */
         }
 
         #score {
@@ -42,12 +44,12 @@
             background-color: #4CAF50; /* Зеленый */
             border: none; /* Убираем рамку */
             color: white; /* Белый текст */
-            padding: 15px 32px; /* Отступы */
+            padding: 3% 5%; /* Используем проценты для отступов */
             text-align: center; /* Выравнивание текста */
             text-decoration: none; /* Убираем подчеркивание */
             display: inline-block; /* Позволяет задавать размеры */
             font-size: 16px; /* Размер шрифта */
-            margin: 4px 2px; /* Отступы */
+            margin: 2% 0; /* Отступы */
             cursor: pointer; /* Указатель мыши */
             border-radius: 8px; /* Закругленные углы */
             transition: background-color 0.3s, transform 0.2s; /* Плавные переходы */
@@ -63,18 +65,20 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-left: 20px;
+            margin-left: 5%; /* Используем проценты для отступов */
         }
 
         button {
-            margin: 5px;
-            padding: 15px;
+            margin: 2%;
+            padding: 3%; /* Используем проценты для отступов */
             font-size: 20px;
             cursor: pointer;
             border: 1px solid #ccc; /* Рамка кнопок */
             border-radius: 5px; /* Закругленные углы */
             background-color: #f0f0f0; /* Цвет фона кнопок */
             transition: background-color 0.3s; /* Плавный переход цвета */
+            width: 60px; /* Фиксированная ширина для кнопок */
+            height: 60px; /* Фиксированная высота для кнопок */
         }
 
         button:hover {
