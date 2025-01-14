@@ -2,22 +2,21 @@
 <html>
 <head>
     <title>Змейка-Дракон</title>
-    <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
         <canvas id="game-canvas" width="400" height="400"></canvas>
-        <div id="controls-container" style="display: flex; flex-direction: column; align-items: center;">
-        <div id="control-buttons" >
-             <button id="up-button" onclick="changeDirection('up')" disabled>Вверх</button>
-             <div style="display:flex;">
-            <button id="left-button" onclick="changeDirection('left')" disabled>Влево</button>
-               <button id="right-button" onclick="changeDirection('right')" disabled>Вправо</button>
+           <div id="controls-container">
+                <button id="up-button" onclick="changeDirection('up')" disabled>Вверх</button>
+                 <div style="display: flex; justify-content: space-around; margin-top: 5px; margin-bottom: 5px;">
+                 <button id="left-button" onclick="changeDirection('left')" disabled>Влево</button>
+            <button id="right-button" onclick="changeDirection('right')" disabled>Вправо</button>
                 </div>
             <button id="down-button" onclick="changeDirection('down')" disabled>Вниз</button>
         </div>
-        </div>
+
          <div id="game-over-overlay" style="display: none;">
         <div id="game-over-message">Игра окончена!<br>Ваш счет: <span id="final-score">0</span><br>Введите ваше имя: <input type="text" id="playerName">
         <br><button onclick="submitScore()">Сохранить результат</button>
@@ -31,7 +30,7 @@
         <button onclick="closeLeaderboard()">Закрыть</button>
     </div>
 </div>
-  <div id="settings-overlay" style="display: none;">
+        <div id="settings-overlay" style="display: none;">
       <div id="settings-content">
         <h2>Настройки</h2>
         <div class="setting-item">
@@ -40,13 +39,14 @@
           <button onclick="closeSettings()">Закрыть</button>
          </div>
         </div>
+       <div id="footer">
+             <button id="settings-button" onclick="showSettings()">Настройки</button>
+             <button id="leaderboard-button" onclick="showLeaderboard()">Таблица лидеров</button>
+       </div>
 
-  <button id="settings-button" onclick="showSettings()">Настройки</button>
-    <button id="leaderboard-button" onclick="showLeaderboard()">Таблица лидеров</button>
     </div>
-
-     <script src="ui/ui.js" type="module"></script>
-       <script src="game.js" type="module"></script>
-        <script src="script.js" type="module"></script>
+    <script type="module" src="ui.js"></script>
+        <script  type="module" src="game.js"></script>
+      <script type="module"  src="script.js"></script>
 </body>
 </html>
