@@ -1,294 +1,245 @@
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #1a1a1a;
-    color: #f0f0f0;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    overflow: hidden;
+import { UIManager } from "./ui.js";
+const tg = window.Telegram.WebApp;
+tg.ready();
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const cellSize = 20;
+const initialSpeed = 150;
+const speedIncrement = 5;
+const minSpeed = 50;
+let snake = [{x: 10, y: 10}];
+let direction = 'right';
+let food = {x: 15, y: 15};
+let score = 0;
+let gameInterval;
+let currentSpeed = initialSpeed;
+let uim = new UIManager();
+const snakeSprite = new Image();
+let useSensor = false;
+snakeSprite.src = 'dragon.png';
+let lastDirectionChange = 0;
+snakeSprite.onload=()=>{
+    startGame();
+};
+function drawBackground(){
+    ctx.fillStyle = '#153411';
+    ctx.fillRect(0,0, canvas.width, canvas.height);
 }
-
-#game-container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #282828;
-    border-radius: 15px;
-    padding: 30px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.7);
-    z-index: 2;
-    overflow: hidden;
-}
-
-#game-canvas {
-    border: 3px solid #555;
-    background-color: #153411;
-    display: block;
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
-    z-index: 3;
-}
-#controls-container {
-    margin-top: 20px;
-     width: 150px;
-
-}
-#control-buttons {
-      display: grid;
-      grid-template-columns: repeat(3,1fr);
-    grid-template-rows: repeat(3,1fr);
-      gap:5px;
-    padding: 5px;
-    
-}
-#control-buttons button{
-     padding: 12px 14px;
-    border: none;
-    border-radius: 8px;
-    background-color: #336699;
-    color: #f0f0f0;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-size: 16px;
-     outline: none;
-     opacity:0.7;
-     box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-}
-#control-buttons button:hover{
-    background-color: #4a7db3;
-}
- #control-buttons button:active{
-        background-color: #395a7d;
-}
-#up-button {
-    grid-column: 2;
-    grid-row: 1;
-    
-}
-#down-button{
-        grid-column: 2;
-    grid-row: 3;
-
-}
-#left-button{
-    grid-column:1;
-     grid-row: 2;
-
-}
-#right-button{
-      grid-column: 3;
-       grid-row: 2;
-
-}
-
-
-#game-over-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-#game-over-message {
-    background: #444;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-}
-#game-over-message input {
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 4px;
-    border:1px solid #777;
-    background-color: #555;
-    color: #ddd;
-    
-}
-#game-over-message button {
-     padding: 12px 18px;
-    margin: 5px;
-    border: none;
-    border-radius: 8px;
-    background-color: #336699;
-    color: #f0f0f0;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-size: 14px;
-    outline: none;
-}
-#game-over-message button:hover{
-    background-color: #4a7db3;
-}
-#game-over-message button:active{
-        background-color: #395a7d;
-}
-#leaderboard-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-#leaderboard-content {
-    background: #444;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
-    max-height: 80vh;
-    overflow-y: auto;
-     box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-}
-#leaderboard-content h2{
-    margin-bottom: 20px;
-}
-#leaderboard-list {
-    list-style: none;
-    padding: 0;
-    text-align: left;
-}
-#leaderboard-list li {
-    padding: 8px 10px;
-    border-bottom: 1px solid #555;
-}
-#leaderboard-list li:last-child {
-    border-bottom: none;
-}
-#settings-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-      background-color: rgba(0, 0, 0, 0.85);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-#settings-content{
-       background: #444;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-}
-.setting-item{
-    margin-bottom:10px;
-}
-#settings-content label {
-    margin-left:5px;
-     cursor: pointer;
-}
- #settings-button{
-     padding: 15px 20px;
-    border: none;
-    border-radius: 8px;
-    background-color: #664d3a;
-    color: #f0f0f0;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-size: 16px;
-    outline: none;
-      margin-top: 20px;
-       box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-}
-#settings-button:hover{
-    background-color: #75654a;
-}
-#settings-button:active{
-     background-color: #573c28;
-}
-#leaderboard-button{
-      padding: 15px 20px;
-    border: none;
-    border-radius: 8px;
-    background-color: #664d3a;
-    color: #f0f0f0;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-size: 16px;
-    outline: none;
-      margin-top: 20px;
-       box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-}
-#leaderboard-button:hover{
-    background-color: #75654a;
-}
-#leaderboard-button:active{
-     background-color: #573c28;
-}
-/* Фоновые облака */
-.cloud {
-  position: absolute;
-  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAACgCAMAAAEe96YVAAAAYFBMVEX///8AAADv7+/09PSgoKDm5uYyMjL19fWfn5+tra3W1tYlJSUHBwfn5+e6urrh4eHV1dWjo6M9PT2lpaXFxcU5OTkwMDAwMDBHR0clJSUXFxcPDw8nJyciIiI1NTX/AAAYAAAGmQGZAAAAG3RSTlMAAQEBAwUGBwgICAkKCwwMDQ4ODw8PERITFBUWGBscHR4hIyYjJSoAAAAJcEhZcwAACxMAAAsTAQCanqYAAANjSURBVHja7dxra9o0DIZhpU4x+Y0h0eM86z97u4f2XvY9gqjL3r7K61l5yYFh9X+4/4770EaXQ8QIAAAQiIAAAEREAAABEQAAAEQoABCIiAAAAiIAAAEREAAABEQoAAiIgAAAIiAAABERAAAARCKiAGIu3t1lK7/7l6N45345i/W4Vq0b6qO+nO5l6d78y9UeJ2vG/20l341493l7f422Zq/93T/O7u5+o98/e3nL266b5v2b2/6b38q477n/+jE+T1vU3z7t/8/7O11f173x9c/u+h+v6r17972f8v2vH+h1sY1uG/pP/fG8831z0l9O+/6Z/6Z/99//H6f0X54VlW4+j586O//m/303r/+9t/9H/9m9u/+q8H6+37V4/+V+9v1//9l//Z+X//5u//+95/4d6/02t9zVjGz+L69P440f/qL/1u/8y//3u/8+38T/x+a//1/3+v7z/1///Z//7//1+/4y81f139l/7f4/87v+d//47/+X32/wW0t/z/4X+z/9f9//82//x8f+d/+8/+N//8//hX//4/+a///T/f/+a////5v//9/7/+///z////z///f////d///y////v//7////5v//6//+/////+///6////1///+f//9//n//n///0f//9//4//7/////+X/9//r///3f///v///1///n//5////7/1//////f//7/7/+X/+f//3////7////f//7///8////8/+f//f//1//9//z//8////6//+//7/8///3///7///6f///f///f////3/+///9//3//////5//9//////1/////+///+f//+//v/+///9////5////+///1///7////6/////+X//n////7////6////n///4/////7/+///7///2////n///8/+v/////+///+/////+///+///+f///4/////+X//v///9////6//z/////+X///3/+///+f///7//+///4/////+///5//5/+f///7///9///8/////+///+///6/+f////7////1/+///4/////+f//+v///7////2////5//z/////+////5/+v////1///3/////+////6//z/////+///4///1///7//7/////5////n////3//5//8//////f//////f//3//////1/+/////+f//+//7///+f//+///+v//9//+f///+f//5///z//7///+v////+///6///9/////+///9////v///2///7////8//9///1//n///3//7///6///z////+///4////7////3//z////7//z//////9//7//6/////+///+///1//7/////6///+///+v//5//7//////f//////f/////+///8//8/////+///5/////5//+//7//5//+////+f//7//+f/////+f///+//7///+///+//+//n///7///5/////+/+//7///+///7//+/////+///7///8////6////9////7////+///+//+//+///4/////+///6///7////+f//+///4/////+///5///9///+f//+///6///5/////+///6//9/////+/+///4/////+///7////8////+///+//n///8////n////+f//+///+///+//+/////+///6///+/////+////f///3////+///6////+///5//5//9/////+/////+/////+///5///9///+//7//+//n////+/////+f////6//+//+//7////+///4/////+///6//7/////+f//6////+////+f///6///5/////+///9////+//+/////+////5//6/////+///7//6//+//7//+////+///9////+///+f/////+///7///+//+///+//+///7//+f//+f///+//+f/////+f///+//5/////+////7////8//+//6///9////+///+///+///+/////+/////+///+////+///4////+/////+///6////+///5//+/////+///7///+///+//+f//+f///+f//6/////+///+//+///+//+////+/////+///+//+f///+f//+//+///+///+//+f/////+f///7///6///+////+///+//+f///+f//+//+///+///+//+f/////+f///7///6///+////+///+//+f///5/////+f//+///4/////+/////+f///8////+///+f///7///6///+///+//+f//+/////+///5//+/////+///+///+//+//+/////+/////+////5//7/////+/////+f//7//+/////+///7///+///5/////+///7///6/////+///7///5////+///5////7///5/+v///z/wXwBnwAAe60+tQAAAABJRU5ErkJggg==') repeat;
-  width: 350px;
-  height: 180px;
-  border-radius: 50%;
-  z-index: 1;
-    opacity:0.3;
-}
-.cloud.cloud1 {
-  top: 30%;
-  left: 5%;
-  animation: cloudMove1 15s linear infinite;
-}
-
-.cloud.cloud2 {
-  top: 15%;
-  left: 70%;
-  animation: cloudMove2 20s linear infinite;
-  width: 500px;
-  height: 220px;
-}
-
-.cloud.cloud3 {
-  top: 70%;
-  left: 20%;
-  animation: cloudMove1 10s linear infinite;
-}
-
-.cloud.cloud4 {
-    top: 70%;
-    right: 10%;
-    animation: cloudMove2 30s linear infinite;
-  width: 450px;
-  height: 200px;
-}
- @keyframes cloudMove1 {
-    0% {
-      transform: translateX(0);
+function drawSnake() {
+    const head = snake[0];
+    let rotation =0;
+        switch (direction) {
+        case 'up':
+              rotation = -Math.PI / 2;
+            break;
+        case 'down':
+           rotation = Math.PI / 2;
+            break;
+        case 'left':
+              rotation =  Math.PI;
+            break;
+        case 'right':
+            rotation = 0;
+            break;
+        default:
+           rotation = 0;
     }
-    50% {
-       transform: translateX(30px);
+    ctx.save();
+    ctx.translate(head.x * cellSize + cellSize / 2, head.y * cellSize + cellSize / 2);
+    ctx.rotate(rotation);
+    ctx.drawImage(snakeSprite, -cellSize/2 , -cellSize /2, cellSize, cellSize);
+    ctx.restore();
+       snake.slice(1).forEach(segment => {
+            ctx.fillStyle = '#66b3ff';
+        ctx.fillRect(segment.x * cellSize, segment.y * cellSize, cellSize, cellSize);
+    });
+}
+function drawFood(){
+    ctx.fillStyle = '#ff6666';
+        ctx.beginPath();
+        ctx.arc(food.x * cellSize + cellSize / 2, food.y * cellSize + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
+        ctx.fill();
+}
+function draw() {
+    drawBackground();
+    drawFood();
+    drawSnake();
+}
+function update(){
+    let head = {x: snake[0].x, y: snake[0].y};
+    switch(direction){
+        case 'up': head.y -= 1; break;
+        case 'down': head.y += 1; break;
+        case 'left': head.x -= 1; break;
+        case 'right': head.x += 1; break;
+    }
+    snake.unshift(head);
+     if (head.x === food.x && head.y === food.y) {
+            score++;
+            generateFood();
+             if (currentSpeed > minSpeed) {
+                 currentSpeed -= speedIncrement;
+             clearInterval(gameInterval);
+             gameInterval = setInterval(gameLoop, currentSpeed);
+            }
+        } else {
+            snake.pop();
+        }
+      if(isGameOver()){
+         endGame();
+     }
+}
+function isGameOver(){
+     let head = snake[0];
+    if (head.x < 0 || head.y < 0 || head.x >= canvas.width / cellSize || head.y >= canvas.height / cellSize) {
+        return true;
+    }
+    for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+            return true;
+        }
+    }
+    return false;
+}
+window.changeDirection = function(newDirection) {
+          if (
+        (direction === 'up' && newDirection === 'down') ||
+        (direction === 'down' && newDirection === 'up') ||
+        (direction === 'left' && newDirection === 'right') ||
+        (direction === 'right' && newDirection === 'left')
+    ) {
+        return;
+    }
+    direction = newDirection;
+};
+function generateFood() {
+    food = {
+        x: Math.floor(Math.random() * (canvas.width / cellSize)),
+        y: Math.floor(Math.random() * (canvas.height / cellSize))
+    };
+      let foodOnSnake = false;
+    for (let segment of snake) {
+        if (segment.x === food.x && segment.y === food.y) {
+            foodOnSnake = true;
+            break;
+        }
+    }
+    if (foodOnSnake) {
+        generateFood();
+    }
+}
+function gameLoop() {
+    update();
+    draw();
+}
+function startGame(){
+     currentSpeed = initialSpeed;
+     gameInterval = setInterval(gameLoop, currentSpeed);
+     generateFood();
+     draw();
+}
+window.restartGame = function(){
+     snake = [{x: 10, y: 10}];
+     direction = 'right';
+     score = 0;
+       clearInterval(gameInterval);
+     uim.hideGameOver();
+     if(!useSensor){
+     enableButtons();
       }
-   100% {
-         transform: translateX(0);
+        startGame();
+}
+function endGame() {
+     clearInterval(gameInterval);
+    uim.setFinalScore(score);
+    uim.showGameOver();
+    disableButtons();
+}
+window.submitScore = function(){
+    let playerName = document.getElementById('playerName').value || "Без имени";
+     uim.saveScore(playerName,score);
+    uim.hideGameOver();
+    uim.showLeaderboard();
+}
+window.showLeaderboard = function(){
+    uim.loadLeaderboard();
+   uim.showLeaderboard();
+}
+window.closeLeaderboard = function(){
+  uim.closeLeaderboard()
+}
+window.showSettings = function(){
+       uim.showSettings();
+        if(useSensor){
+           disableButtons();
+        }else{
+            enableButtons();
         }
 }
- @keyframes cloudMove2 {
-    0% {
-      transform: translateX(0);
-    }
-     50% {
-       transform: translateX(-40px);
+window.closeSettings = function() {
+    uim.closeSettings();
+}
+function disableButtons() {
+     document.querySelectorAll('#controls-container button').forEach(button => {
+            button.disabled = true;
+          button.style.opacity =0.5;
+     });
+}
+function enableButtons() {
+         document.querySelectorAll('#controls-container button').forEach(button => {
+            button.disabled = false;
+           button.style.opacity =1;
+      });
+}
+window.toggleSensorControl = function () {
+    useSensor = document.getElementById('sensor-control').checked;
+      if(useSensor){
+         disableButtons()
+        setupMotionSensor()
+      }else{
+         enableButtons();
+            if(motionSensor) motionSensor.stop();
       }
-    100% {
-      transform: translateX(0);
-    }
+};
+let motionSensor;
+function setupMotionSensor() {
+    try {
+         motionSensor = new DeviceOrientationSensor({ frequency: 20 });
+        motionSensor.addEventListener('reading', () => {
+               const  threshold=0.2;
+           const alpha = motionSensor.alpha;
+            const beta = motionSensor.beta;
+               const gamma = motionSensor.gamma;
+             if (alpha == null || beta == null || gamma == null){
+                  return
+             }
+                const timeNow = Date.now();
+                if (timeNow - lastDirectionChange < 500) return
+    let newDirection = direction;
+     if (Math.abs(beta) > threshold &&  Math.abs(gamma)< threshold )
+    {
+       newDirection= beta > 0 ? "down" : "up";
+           }
+        if ( Math.abs(gamma) > threshold && Math.abs(beta) < threshold)
+        {
+               newDirection = gamma >0 ? "right":"left";
+             }
+  if(newDirection!==direction){
+         window.changeDirection(newDirection);
+         lastDirectionChange = Date.now();
+           }
+        });
+        motionSensor.start();
+    } catch (error) {
+        console.error('Accelerometer/gyroscope not supported:', error);
+         document.getElementById('sensor-control').checked = false;
+     disableButtons();
+     }
+}
+ //  Create background clouds
+const gameContainer = document.getElementById('game-container');
+for(let i=1; i<=4; i++){
+   const cloud = document.createElement('div');
+    cloud.className=`cloud cloud${i}`;
+    gameContainer.insertBefore(cloud, gameContainer.firstChild);
 }
