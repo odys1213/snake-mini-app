@@ -220,30 +220,6 @@ body {
   z-index: 1;
       opacity:0.3;
 }
-.cloud.cloud1 {
-  top: 30%;
-  left: 5%;
-  animation: cloudMove1 15s linear infinite;
-}
-.cloud.cloud2 {
-  top: 15%;
-  left: 70%;
-  animation: cloudMove2 20s linear infinite;
-  width: 500px;
-  height: 220px;
-}
-.cloud.cloud3 {
-  top: 70%;
-  left: 20%;
-  animation: cloudMove1 10s linear infinite;
-}
-.cloud.cloud4 {
-  top: 70%;
-  right: 10%;
-  animation: cloudMove2 30s linear infinite;
-  width: 450px;
-  height: 200px;
-}
 @keyframes cloudMove1 {
   0% {
       transform: translateX(0);
