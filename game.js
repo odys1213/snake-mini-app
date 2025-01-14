@@ -7,18 +7,24 @@ const cellSize = 20;
 const initialSpeed = 150;
 const speedIncrement = 5;
 const minSpeed = 50;
-let snake = [{x: 10, y: 10}];
+let snake = [{x: 10, y: 10, type: 'head'}];
 let direction = 'right';
 let food = {x: 15, y: 15};
 let score = 0;
 let gameInterval;
 let currentSpeed = initialSpeed;
-let uim = new UIManager();
-const snakeSprite = new Image();
+let uim;
+const snakeHeadSprite = new Image();
+const foodSprite = new Image();
 let useSensor = false;
-snakeSprite.src = 'dragon.png';
 let lastDirectionChange = 0;
-snakeSprite.onload=()=>{
+let controlType = 'button';
+snakeHeadSprite.src = 'dragon.png';
+foodSprite.src = 'apple.png'
+
+snakeHeadSprite.onload = () => {
+    uim = new UIManager();
+     loadSavedSettings()
     startGame();
 };
 function drawBackground(){
@@ -26,39 +32,38 @@ function drawBackground(){
     ctx.fillRect(0,0, canvas.width, canvas.height);
 }
 function drawSnake() {
-    const head = snake[0];
-    let rotation =0;
-        switch (direction) {
-        case 'up':
-              rotation = -Math.PI / 2;
-            break;
-        case 'down':
-           rotation = Math.PI / 2;
-            break;
-        case 'left':
-              rotation =  Math.PI;
-            break;
-        case 'right':
-            rotation = 0;
-            break;
-        default:
-           rotation = 0;
-    }
-    ctx.save();
-    ctx.translate(head.x * cellSize + cellSize / 2, head.y * cellSize + cellSize / 2);
-    ctx.rotate(rotation);
-    ctx.drawImage(snakeSprite, -cellSize/2 , -cellSize /2, cellSize, cellSize);
-    ctx.restore();
-       snake.slice(1).forEach(segment => {
+    snake.forEach((segment, index) => {
+        if(segment.type === 'head'){
+             let rotation =0;
+            switch (direction) {
+                case 'up':
+                      rotation = -Math.PI / 2;
+                    break;
+                case 'down':
+                   rotation = Math.PI / 2;
+                    break;
+                case 'left':
+                      rotation =  Math.PI;
+                    break;
+                case 'right':
+                    rotation = 0;
+                    break;
+                default:
+                   rotation = 0;
+            }
+            ctx.save();
+            ctx.translate(segment.x * cellSize + cellSize / 2, segment.y * cellSize + cellSize / 2);
+            ctx.rotate(rotation);
+             ctx.drawImage(snakeHeadSprite, -cellSize/2 , -cellSize /2, cellSize, cellSize);
+            ctx.restore();
+        }else {
             ctx.fillStyle = '#66b3ff';
-        ctx.fillRect(segment.x * cellSize, segment.y * cellSize, cellSize, cellSize);
+            ctx.fillRect(segment.x * cellSize, segment.y * cellSize, cellSize, cellSize);
+        }
     });
 }
 function drawFood(){
-    ctx.fillStyle = '#ff6666';
-        ctx.beginPath();
-        ctx.arc(food.x * cellSize + cellSize / 2, food.y * cellSize + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.drawImage(foodSprite, food.x * cellSize, food.y*cellSize, cellSize, cellSize )
 }
 function draw() {
     drawBackground();
@@ -66,7 +71,7 @@ function draw() {
     drawSnake();
 }
 function update(){
-    let head = {x: snake[0].x, y: snake[0].y};
+    let head = {x: snake[0].x, y: snake[0].y, type: 'head'};
     switch(direction){
         case 'up': head.y -= 1; break;
         case 'down': head.y += 1; break;
@@ -77,6 +82,7 @@ function update(){
      if (head.x === food.x && head.y === food.y) {
             score++;
             generateFood();
+            snake[1].type = 'body'
              if (currentSpeed > minSpeed) {
                  currentSpeed -= speedIncrement;
              clearInterval(gameInterval);
@@ -133,30 +139,34 @@ function gameLoop() {
     draw();
 }
 function startGame(){
-     currentSpeed = initialSpeed;
+    currentSpeed = initialSpeed;
      gameInterval = setInterval(gameLoop, currentSpeed);
      generateFood();
      draw();
+      if(controlType === 'button'){
+          uim.enableButtons()
+        }
+
 }
 window.restartGame = function(){
-     snake = [{x: 10, y: 10}];
+     snake = [{x: 10, y: 10, type: 'head'}];
      direction = 'right';
      score = 0;
        clearInterval(gameInterval);
      uim.hideGameOver();
-     if(!useSensor){
-     enableButtons();
-      }
+    if(controlType === 'button'){
+        uim.enableButtons();
+        }
         startGame();
 }
 function endGame() {
      clearInterval(gameInterval);
     uim.setFinalScore(score);
     uim.showGameOver();
-    disableButtons();
+       uim.disableButtons();
 }
 window.submitScore = function(){
-    let playerName = document.getElementById('playerName').value || "Без имени";
+    let playerName = tg.initDataUnsafe?.user?.username || "Без имени";
      uim.saveScore(playerName,score);
     uim.hideGameOver();
     uim.showLeaderboard();
@@ -170,37 +180,30 @@ window.closeLeaderboard = function(){
 }
 window.showSettings = function(){
        uim.showSettings();
-        if(useSensor){
-           disableButtons();
+    if(controlType === 'sensor'){
+           uim.disableButtons();
         }else{
-            enableButtons();
-        }
+        uim.enableButtons();
+       }
 }
 window.closeSettings = function() {
     uim.closeSettings();
 }
-function disableButtons() {
-     document.querySelectorAll('#controls-container button').forEach(button => {
-            button.disabled = true;
-          button.style.opacity =0.5;
-     });
-}
-function enableButtons() {
-         document.querySelectorAll('#controls-container button').forEach(button => {
-            button.disabled = false;
-           button.style.opacity =1;
-      });
-}
-window.toggleSensorControl = function () {
-    useSensor = document.getElementById('sensor-control').checked;
-      if(useSensor){
-         disableButtons()
-        setupMotionSensor()
-      }else{
-         enableButtons();
-            if(motionSensor) motionSensor.stop();
-      }
+
+window.setControlType=function(controlElement) {
+  controlType = controlElement.value;
+        if (controlType === 'sensor') {
+            uim.disableButtons()
+            setupMotionSensor();
+             useSensor = true;
+        }else{
+           if (motionSensor) motionSensor.stop();
+            uim.enableButtons()
+             useSensor = false;
+        }
+       saveSettings()
 };
+
 let motionSensor;
 function setupMotionSensor() {
     try {
@@ -233,8 +236,22 @@ function setupMotionSensor() {
     } catch (error) {
         console.error('Accelerometer/gyroscope not supported:', error);
          document.getElementById('sensor-control').checked = false;
-     disableButtons();
-     }
+        uim.disableButtons();
+    }
+}
+function loadSavedSettings(){
+  const savedControl=   localStorage.getItem('controlType')
+ if(savedControl){
+      controlType = savedControl
+        const radio =  document.querySelector(`input[name="controlType"][value="${controlType}"]`);
+     if(radio){
+         radio.checked = true;
+        }
+
+   }
+}
+function saveSettings(){
+        localStorage.setItem('controlType',controlType);
 }
  //  Create background clouds
 const gameContainer = document.getElementById('game-container');
