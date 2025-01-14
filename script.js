@@ -89,19 +89,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Обработчики событий для кнопок управления
-    document.getElementById('upButton').addEventListener('click', () => {
+    document.getElementById('upButton').addEventListener('mousedown', () => {
         if (direction !== 'down') direction = 'up';
     });
 
-    document.getElementById('downButton').addEventListener('click', () => {
+    document.getElementById('downButton').addEventListener('mousedown', () => {
         if (direction !== 'up') direction = 'down';
     });
 
-    document.getElementById('leftButton').addEventListener('click', () => {
+    document.getElementById('leftButton').addEventListener('mousedown', () => {
         if (direction !== 'right') direction = 'left';
     });
 
-    document.getElementById('rightButton').addEventListener('click', () => {
+    document.getElementById('rightButton').addEventListener('mousedown', () => {
         if (direction !== 'left') direction = 'right';
     });
 
