@@ -11,6 +11,8 @@ clickerButton.addEventListener('click', () => {
 
 // Функция для отправки кликов на сервер
 function sendClickData(count) {
+    console.log('Отправка данных на сервер:', count);  // Логируем количество кликов
+
     fetch('http://localhost:5000/click', {
         method: 'POST',
         headers: {
@@ -19,6 +21,10 @@ function sendClickData(count) {
         body: JSON.stringify({ clickCount: count })
     })
     .then(response => response.json())
-    .then(data => console.log('Данные отправлены на сервер:', data))
-    .catch(error => console.error('Ошибка при отправке данных:', error));
+    .then(data => {
+        console.log('Данные отправлены на сервер:', data);
+    })
+    .catch(error => {
+        console.error('Ошибка при отправке данных:', error);
+    });
 }
