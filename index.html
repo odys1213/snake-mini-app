@@ -1,213 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game</title>
+    <!-- Предыдущие стили остаются теми же -->
     <style>
-        body {
-            display: flex;
-            flex-direction: column;
+        /* Добавляем стили для меню */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
             align-items: center;
-            background-color: #000;
-            margin: 0;
-            font-family: 'Courier New', monospace;
-            color: #33ff33;
+            z-index: 1000;
         }
 
-        #game-container {
-            margin-top: 20px;
-        }
-
-        canvas {
+        .menu-content {
+            background: #000;
             border: 2px solid #33ff33;
-            background-color: #000;
-        }
-
-        #score {
-            font-size: 24px;
-            margin: 10px 0;
-            text-shadow: 0 0 5px #33ff33;
-        }
-
-        #leaderboard {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #000;
-            border: 2px solid #33ff33;
-            width: 300px;
+            padding: 20px;
+            text-align: center;
             box-shadow: 0 0 10px #33ff33;
         }
 
-        #leaderboard h2 {
-            text-align: center;
-            margin-top: 0;
+        .menu-button {
+            background: #000;
+            color: #33ff33;
+            border: 1px solid #33ff33;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
             text-shadow: 0 0 5px #33ff33;
         }
 
-        #leaderboard-list {
-            list-style-type: none;
-            padding: 0;
+        .menu-button:hover {
+            background: #33ff33;
+            color: #000;
         }
 
-        #leaderboard-list li {
-            padding: 5px;
-            border-bottom: 1px solid #33ff33;
-            text-shadow: 0 0 3px #33ff33;
+        .settings-panel {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #000;
+            border: 2px solid #33ff33;
+            padding: 20px;
+            z-index: 1001;
         }
     </style>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div id="game-container">
-        <div id="score">Score: 0</div>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <!-- Добавляем меню -->
+    <div class="menu-overlay" id="gameOverMenu">
+        <div class="menu-content">
+            <h2>Game Over!</h2>
+            <p id="finalScore">Score: 0</p>
+            <button class="menu-button" onclick="showLeaderboard()">Leaderboard</button>
+            <button class="menu-button" onclick="restartGame()">Play Again</button>
+        </div>
     </div>
-    <div id="leaderboard">
-        <h2>Leaderboard</h2>
-        <ul id="leaderboard-list"></ul>
+
+    <!-- Добавляем настройки -->
+    <div class="settings-panel" id="settingsPanel">
+        <h2>Settings</h2>
+        <div>
+            <label>Game Speed:</label>
+            <input type="range" id="gameSpeed" min="50" max="150" value="100">
+        </div>
+        <div>
+            <label>Grid Visibility:</label>
+            <input type="checkbox" id="showGrid" checked>
+        </div>
+        <button class="menu-button" onclick="saveSettings()">Save</button>
     </div>
+
+    <!-- Добавляем кнопку настроек -->
+    <button class="menu-button" onclick="toggleSettings()" style="position: fixed; top: 10px; right: 10px;">⚙️</button>
+
+    <!-- Остальной HTML остается прежним -->
 
     <script>
-        // Telegram WebApp initialization
-        const tg = window.Telegram.WebApp;
-        const playerName = tg.initDataUnsafe?.user?.username || 'Player';
-        
-        let canvas = document.getElementById('gameCanvas');
-        let ctx = canvas.getContext('2d');
-        let snake = [];
-        let food = {};
-        let direction = 'right';
-        let score = 0;
-        let gameLoop;
-        let touchSensitivity = 30; // Уменьшенное значение для более быстрого отклика
+        // Добавляем конфигурацию для GitHub API
+        const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN';
+        const GITHUB_REPO = 'YOUR_USERNAME/YOUR_REPO';
+        const GITHUB_PATH = 'leaderboard.json';
 
-        // Touch controls with improved sensitivity
-        let xDown = null;
-        let yDown = null;
-
-        document.addEventListener('touchstart', handleTouchStart, { passive: true });
-        document.addEventListener('touchmove', handleTouchMove, { passive: true });
-
-        function handleTouchStart(evt) {
-            const firstTouch = evt.touches[0];
-            xDown = firstTouch.clientX;
-            yDown = firstTouch.clientY;
-        }
-
-        function handleTouchMove(evt) {
-            if (!xDown || !yDown) return;
-
-            const xUp = evt.touches[0].clientX;
-            const yUp = evt.touches[0].clientY;
-
-            const xDiff = xDown - xUp;
-            const yDiff = yDown - yUp;
-
-            if (Math.abs(xDiff) < touchSensitivity && Math.abs(yDiff) < touchSensitivity) return;
-
-            if (Math.abs(xDiff) > Math.abs(yDiff)) {
-                if (xDiff > 0 && direction !== 'right') direction = 'left';
-                else if (xDiff < 0 && direction !== 'left') direction = 'right';
-            } else {
-                if (yDiff > 0 && direction !== 'down') direction = 'up';
-                else if (yDiff < 0 && direction !== 'up') direction = 'down';
+        // Функция для сохранения рекордов на GitHub
+        async function saveToGitHub(leaderboardData) {
+            try {
+                const content = btoa(JSON.stringify(leaderboardData, null, 2));
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'Update leaderboard',
+                        content: content,
+                        sha: await getFileSHA()
+                    })
+                });
+                return response.ok;
+            } catch (error) {
+                console.error('Error saving to GitHub:', error);
+                return false;
             }
-
-            xDown = null;
-            yDown = null;
         }
 
-        initGame();
-
-        function initGame() {
-            snake = [{x: 10, y: 10}];
-            direction = 'right';
-            score = 0;
-            document.getElementById('score').textContent = 'Score: ' + score;
-            createFood();
-            if (gameLoop) clearInterval(gameLoop);
-            gameLoop = setInterval(gameStep, 100);
-        }
-
-        function createFood() {
-            food = {
-                x: Math.floor(Math.random() * (canvas.width / 20)),
-                y: Math.floor(Math.random() * (canvas.height / 20))
-            };
-        }
-
-        function gameStep() {
-            let newHead = {x: snake[0].x, y: snake[0].y};
-
-            if (direction === 'right') newHead.x++;
-            if (direction === 'left') newHead.x--;
-            if (direction === 'up') newHead.y--;
-            if (direction === 'down') newHead.y++;
-
-            if (newHead.x < 0 || newHead.x >= canvas.width / 20 ||
-                newHead.y < 0 || newHead.y >= canvas.height / 20 ||
-                checkCollision(newHead)) {
-                gameOver();
-                return;
+        // Функция для получения SHA файла
+        async function getFileSHA() {
+            try {
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`
+                    }
+                });
+                const data = await response.json();
+                return data.sha;
+            } catch (error) {
+                return '';
             }
-
-            snake.unshift(newHead);
-
-            if (newHead.x === food.x && newHead.y === food.y) {
-                score += 10;
-                document.getElementById('score').textContent = 'Score: ' + score;
-                createFood();
-            } else {
-                snake.pop();
-            }
-
-            draw();
         }
 
-        function draw() {
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw grid
-            ctx.strokeStyle = '#0f0';
-            ctx.lineWidth = 0.5;
-            for (let i = 0; i < canvas.width; i += 20) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, canvas.height);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(0, i);
-                ctx.lineTo(canvas.width, i);
-                ctx.stroke();
-            }
-
-            // Draw snake
-            ctx.fillStyle = '#33ff33';
-            snake.forEach(segment => {
-                ctx.fillRect(segment.x * 20 + 1, segment.y * 20 + 1, 18, 18);
-            });
-
-            // Draw food
-            ctx.fillStyle = '#ff3333';
-            ctx.fillRect(food.x * 20 + 1, food.y * 20 + 1, 18, 18);
-        }
-
-        function checkCollision(head) {
-            return snake.some(segment => segment.x === head.x && segment.y === head.y);
-        }
-
-        function gameOver() {
-            clearInterval(gameLoop);
-            updateLeaderboard(score);
-            tg.sendData(JSON.stringify({ score: score, username: playerName }));
-            setTimeout(() => {
-                initGame();
-            }, 1000);
-        }
-
-        function updateLeaderboard(score) {
+        // Обновляем функцию updateLeaderboard
+        async function updateLeaderboard(score) {
             let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
             const playerIndex = leaderboard.findIndex(entry => entry.name === playerName);
             
@@ -224,42 +146,78 @@
             
             leaderboard.sort((a, b) => b.score - a.score);
             leaderboard = leaderboard.slice(0, 10);
-            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
             
-            // Send to server
-            fetch('YOUR_SERVER_ENDPOINT', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: playerName,
-                    score: score
-                })
-            });
+            // Сохраняем локально и на GitHub
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+            await saveToGitHub(leaderboard);
             
             displayLeaderboard();
         }
 
-        function displayLeaderboard() {
-            const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
-            const leaderboardList = document.getElementById('leaderboard-list');
-            leaderboardList.innerHTML = '';
-            leaderboard.forEach((entry, index) => {
-                const li = document.createElement('li');
-                li.textContent = `${index + 1}. ${entry.name}: ${entry.score}`;
-                leaderboardList.appendChild(li);
-            });
+        // Функции для меню
+        function showGameOverMenu(finalScore) {
+            document.getElementById('finalScore').textContent = `Score: ${finalScore}`;
+            document.getElementById('gameOverMenu').style.display = 'flex';
         }
 
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'ArrowRight' && direction !== 'left') direction = 'right';
-            if (event.key === 'ArrowLeft' && direction !== 'right') direction = 'left';
-            if (event.key === 'ArrowUp' && direction !== 'down') direction = 'up';
-            if (event.key === 'ArrowDown' && direction !== 'up') direction = 'down';
-        });
+        function hideGameOverMenu() {
+            document.getElementById('gameOverMenu').style.display = 'none';
+        }
 
-        displayLeaderboard();
+        function restartGame() {
+            hideGameOverMenu();
+            initGame();
+        }
+
+        function showLeaderboard() {
+            // Показываем таблицу лидеров
+            document.getElementById('leaderboard').style.display = 'block';
+        }
+
+        // Настройки
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function saveSettings() {
+            const speed = document.getElementById('gameSpeed').value;
+            const showGrid = document.getElementById('showGrid').checked;
+            
+            // Сохраняем настройки
+            localStorage.setItem('gameSettings', JSON.stringify({
+                speed: speed,
+                showGrid: showGrid
+            }));
+            
+            // Применяем настройки
+            applySettings();
+            toggleSettings();
+        }
+
+        function applySettings() {
+            const settings = JSON.parse(localStorage.getItem('gameSettings')) || {
+                speed: 100,
+                showGrid: true
+            };
+            
+            // Применяем скорость
+            if (gameLoop) {
+                clearInterval(gameLoop);
+                gameLoop = setInterval(gameStep, settings.speed);
+            }
+        }
+
+        // Обновляем функцию gameOver
+        function gameOver() {
+            clearInterval(gameLoop);
+            updateLeaderboard(score);
+            tg.sendData(JSON.stringify({ score: score, username: playerName }));
+            showGameOverMenu(score);
+        }
+
+        // Загружаем настройки при старте
+        applySettings();
     </script>
 </body>
 </html>
