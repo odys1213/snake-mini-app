@@ -1,57 +1,265 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Змейка-Дракон</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #000;
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            color: #33ff33;
+        }
+
+        #game-container {
+            margin-top: 20px;
+        }
+
+        canvas {
+            border: 2px solid #33ff33;
+            background-color: #000;
+        }
+
+        #score {
+            font-size: 24px;
+            margin: 10px 0;
+            text-shadow: 0 0 5px #33ff33;
+        }
+
+        #leaderboard {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #000;
+            border: 2px solid #33ff33;
+            width: 300px;
+            box-shadow: 0 0 10px #33ff33;
+        }
+
+        #leaderboard h2 {
+            text-align: center;
+            margin-top: 0;
+            text-shadow: 0 0 5px #33ff33;
+        }
+
+        #leaderboard-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #leaderboard-list li {
+            padding: 5px;
+            border-bottom: 1px solid #33ff33;
+            text-shadow: 0 0 3px #33ff33;
+        }
+    </style>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="game-container">
-    <canvas id="game-canvas" width="400" height="400"></canvas>
-    <div id="controls-container">
-        <div style="display: flex; flex-direction: column; align-items: center;justify-content: center;">
-            <button id="up-button" onclick="changeDirection('up')" disabled>Вверх</button>
-            <div style="display: flex; justify-content: center; margin-top: 5px; margin-bottom: 5px;">
-                <button id="left-button" onclick="changeDirection('left')" disabled>Влево</button>
-                <button id="right-button" onclick="changeDirection('right')" disabled>Вправо</button>
-            </div>
-            <button id="down-button" onclick="changeDirection('down')" disabled>Вниз</button>
-        </div>
+    <div id="game-container">
+        <div id="score">Score: 0</div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
     </div>
-    <div id="game-over-overlay" style="display: none;">
-        <div id="game-over-message">Игра окончена!<br>Ваш счет: <span id="final-score">0</span><br>
-            <button onclick="submitScore()">Сохранить результат</button>
-            <button onclick="restartGame()">Начать заново</button>
-        </div>
+    <div id="leaderboard">
+        <h2>Leaderboard</h2>
+        <ul id="leaderboard-list"></ul>
     </div>
-    <div id="leaderboard-overlay" style="display: none;">
-        <div id="leaderboard-content">
-            <h2>Таблица лидеров</h2>
-            <ul id="leaderboard-list"></ul>
-             <button onclick="closeLeaderboard()">Закрыть</button>
-        </div>
-    </div>
-    <div id="settings-overlay" style="display: none;">
-        <div id="settings-content">
-            <h2>Настройки</h2>
-            <div class="setting-item">
-                <input type="radio" id="button-control" name="controlType" value="button"  checked>
-                <label for="button-control"  onclick="setControlType(this.previousElementSibling)">Управление кнопками</label>
-            </div>
-            <div class="setting-item">
-                <input type="radio" id="sensor-control" name="controlType" value="sensor">
-                <label for="sensor-control" onclick="setControlType(this.previousElementSibling)">Управление сенсором</label>
-            </div>
-            <button onclick="closeSettings()">Закрыть</button>
-        </div>
-    </div>
-    <div id="footer">
-        <button id="settings-button" onclick="showSettings()">Настройки</button>
-        <button id="leaderboard-button" onclick="showLeaderboard()">Таблица лидеров</button>
-    </div>
-</div>
-<script type="module" src="game.js"></script>
-<script type="module"  src="script.js"></script>
-<script type="module"  src="ui.js"></script>
+
+    <script>
+        // Telegram WebApp initialization
+        const tg = window.Telegram.WebApp;
+        const playerName = tg.initDataUnsafe?.user?.username || 'Player';
+        
+        let canvas = document.getElementById('gameCanvas');
+        let ctx = canvas.getContext('2d');
+        let snake = [];
+        let food = {};
+        let direction = 'right';
+        let score = 0;
+        let gameLoop;
+        let touchSensitivity = 30; // Уменьшенное значение для более быстрого отклика
+
+        // Touch controls with improved sensitivity
+        let xDown = null;
+        let yDown = null;
+
+        document.addEventListener('touchstart', handleTouchStart, { passive: true });
+        document.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+        function handleTouchStart(evt) {
+            const firstTouch = evt.touches[0];
+            xDown = firstTouch.clientX;
+            yDown = firstTouch.clientY;
+        }
+
+        function handleTouchMove(evt) {
+            if (!xDown || !yDown) return;
+
+            const xUp = evt.touches[0].clientX;
+            const yUp = evt.touches[0].clientY;
+
+            const xDiff = xDown - xUp;
+            const yDiff = yDown - yUp;
+
+            if (Math.abs(xDiff) < touchSensitivity && Math.abs(yDiff) < touchSensitivity) return;
+
+            if (Math.abs(xDiff) > Math.abs(yDiff)) {
+                if (xDiff > 0 && direction !== 'right') direction = 'left';
+                else if (xDiff < 0 && direction !== 'left') direction = 'right';
+            } else {
+                if (yDiff > 0 && direction !== 'down') direction = 'up';
+                else if (yDiff < 0 && direction !== 'up') direction = 'down';
+            }
+
+            xDown = null;
+            yDown = null;
+        }
+
+        initGame();
+
+        function initGame() {
+            snake = [{x: 10, y: 10}];
+            direction = 'right';
+            score = 0;
+            document.getElementById('score').textContent = 'Score: ' + score;
+            createFood();
+            if (gameLoop) clearInterval(gameLoop);
+            gameLoop = setInterval(gameStep, 100);
+        }
+
+        function createFood() {
+            food = {
+                x: Math.floor(Math.random() * (canvas.width / 20)),
+                y: Math.floor(Math.random() * (canvas.height / 20))
+            };
+        }
+
+        function gameStep() {
+            let newHead = {x: snake[0].x, y: snake[0].y};
+
+            if (direction === 'right') newHead.x++;
+            if (direction === 'left') newHead.x--;
+            if (direction === 'up') newHead.y--;
+            if (direction === 'down') newHead.y++;
+
+            if (newHead.x < 0 || newHead.x >= canvas.width / 20 ||
+                newHead.y < 0 || newHead.y >= canvas.height / 20 ||
+                checkCollision(newHead)) {
+                gameOver();
+                return;
+            }
+
+            snake.unshift(newHead);
+
+            if (newHead.x === food.x && newHead.y === food.y) {
+                score += 10;
+                document.getElementById('score').textContent = 'Score: ' + score;
+                createFood();
+            } else {
+                snake.pop();
+            }
+
+            draw();
+        }
+
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid
+            ctx.strokeStyle = '#0f0';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < canvas.width; i += 20) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+
+            // Draw snake
+            ctx.fillStyle = '#33ff33';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x * 20 + 1, segment.y * 20 + 1, 18, 18);
+            });
+
+            // Draw food
+            ctx.fillStyle = '#ff3333';
+            ctx.fillRect(food.x * 20 + 1, food.y * 20 + 1, 18, 18);
+        }
+
+        function checkCollision(head) {
+            return snake.some(segment => segment.x === head.x && segment.y === head.y);
+        }
+
+        function gameOver() {
+            clearInterval(gameLoop);
+            updateLeaderboard(score);
+            tg.sendData(JSON.stringify({ score: score, username: playerName }));
+            setTimeout(() => {
+                initGame();
+            }, 1000);
+        }
+
+        function updateLeaderboard(score) {
+            let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+            const playerIndex = leaderboard.findIndex(entry => entry.name === playerName);
+            
+            if (playerIndex !== -1) {
+                if (score > leaderboard[playerIndex].score) {
+                    leaderboard[playerIndex].score = score;
+                }
+            } else {
+                leaderboard.push({
+                    name: playerName,
+                    score: score
+                });
+            }
+            
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 10);
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+            
+            // Send to server
+            fetch('YOUR_SERVER_ENDPOINT', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: playerName,
+                    score: score
+                })
+            });
+            
+            displayLeaderboard();
+        }
+
+        function displayLeaderboard() {
+            const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+            const leaderboardList = document.getElementById('leaderboard-list');
+            leaderboardList.innerHTML = '';
+            leaderboard.forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. ${entry.name}: ${entry.score}`;
+                leaderboardList.appendChild(li);
+            });
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowRight' && direction !== 'left') direction = 'right';
+            if (event.key === 'ArrowLeft' && direction !== 'right') direction = 'left';
+            if (event.key === 'ArrowUp' && direction !== 'down') direction = 'up';
+            if (event.key === 'ArrowDown' && direction !== 'up') direction = 'down';
+        });
+
+        displayLeaderboard();
+    </script>
 </body>
 </html>
