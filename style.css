@@ -1,0 +1,104 @@
+body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px;
+    background-color: #333;
+    color: #eee;
+}
+
+#gameCanvas {
+    border: 2px solid #777;
+    margin-bottom: 10px;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    background-color: #111;
+}
+
+#scoreBoard {
+    margin-top: 10px;
+    text-align: center;
+}
+
+#leaderboard {
+    list-style: none;
+    padding: 0;
+}
+
+#leaderboard > div {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+#leaderboard ul {
+    padding-left: 20px;
+}
+
+#leaderboard li {
+    margin-bottom: 5px;
+}
+
+#startButton {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 1.2em;
+    background-color: #555;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#startButton:hover {
+    background-color: #777;
+}
+
+#appleExplanations {
+    display: flex;
+    margin-top: 10px;
+    width: 100%;
+    max-width: 600px; /* Ограничиваем ширину */
+}
+
+#explanations {
+    flex: 1;
+    padding-right: 20px;
+}
+
+.explanation-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.apple-color-indicator {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    margin-right: 10px;
+    flex-shrink: 0; 
+}
+
+#leaderboard {
+    flex: 1;
+    padding-left: 20px;
+}
+
+/* Для маленьких экранов располагаем блоки вертикально */
+@media (max-width: 600px) {
+    #appleExplanations {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #explanations {
+        padding-right: 0;
+        margin-bottom: 20px;
+    }
+
+    #leaderboard {
+        padding-left: 0;
+    }
+}
