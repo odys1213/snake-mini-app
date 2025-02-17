@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Змейка</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <title>Змейка Mini App</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
 </head>
 <body>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <div id="scoreBoard">
-        <div>Счет: <span id="score">0</span></div>
-    </div>
-    <button id="startButton">Начать игру</button>
-    <div id="appleExplanations">
-        <div id="explanations"></div>
-        <div id="leaderboard">
-            <div>Топ-5 лидеров:</div>
-            <ul></ul>
+    <div class="container">
+        <h1>Змейка</h1>
+        <canvas id="gameCanvas" width="300" height="300"></canvas>
+        <div id="score">Счет: 0</div>
+        <div class="controls">
+            <button id="up">Вверх</button>
+            <div class="horizontal-controls">
+                <button id="left">Влево</button>
+                <button id="right">Вправо</button>
+            </div>
+            <button id="down">Вниз</button>
         </div>
     </div>
-
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
