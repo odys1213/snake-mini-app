@@ -1,25 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
     <title>Змейка Mini App</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
 </head>
 <body>
     <div class="container">
         <h1>Змейка</h1>
-        <canvas id="gameCanvas" width="300" height="300"></canvas>
-        <div id="score">Счет: 0</div>
-        <div class="controls">
-            <button id="up">Вверх</button>
-            <div class="horizontal-controls">
-                <button id="left">Влево</button>
-                <button id="right">Вправо</button>
+        <div class="controls-header">
+            <button id="settingsButton">Настройки</button>
+            <button id="historyButton">История</button>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="scoreBoard">
+            <div>Счет: <span id="score">0</span></div>
+        </div>
+        <button id="startButton">Начать игру</button>
+
+        <div id="telegramAuth">
+            <p>Запустите нашего бота в Telegram: <a href="https://t.me/Testirovanie_qweeqw_bot" target="_blank">@Testirovanie_qweeqw_bot</a> и получите ключ.</p>
+            <div>
+                <label for="authKey">Введите ключ:</label>
+                <input type="text" id="authKey">
+                <button id="verifyKeyButton">ОК</button>
             </div>
-            <button id="down">Вниз</button>
+            <p id="authStatus"></p>
+        </div>
+
+        <div id="settingsModal">
+            <h3>Настройки</h3>
+            <span id="closeSettingsModal" class="close-button">X</span>
+            <div id="telegramInfo">
+                <!-- Здесь будет отображаться аватар -->
+                <img id="telegramAvatar" src="" alt="Аватар">
+                <p id="telegramUsername"></p>
+            </div>
+            <div id="highScore"></div>
+            <button id="logoutButton">Выйти</button>
+        </div>
+
+        <div id="historyModal">
+            <h3>История игр</h3>
+            <span id="closeHistoryModalButton" class="close-button">X</span>
+            <div id="historyList"></div>
+        </div>
+
+        <div id="nicknameInputContainer" style="display: none;">
+            <label for="nickname">Введите ваш ник:</label>
+            <input type="text" id="nickname">
+        </div>
+        <div id="appleExplanations">
+            <div id="explanations"></div>
+            <div id="leaderboardSection">
+                <div id="prizes">
+                    <div>Призы лидерам:</div>
+                    <ul></ul>
+                </div>
+                <div id="leaderboard">
+                    <div>Топ-5 лидеров:</div>
+                    <ul id="leaderboardList"></ul>
+                </div>
+            </div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
