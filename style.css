@@ -10,7 +10,6 @@ body {
 }
 
 .container {
-    width: 100%;
     max-width: 600px; /* Ограничиваем ширину контейнера на больших экранах */
     padding: 20px;
     display: flex;
